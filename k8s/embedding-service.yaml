@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: embedding-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: embedding-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: embedding
+  template:
+    metadata:
+      labels:
+        app: embedding
+    spec:
+      containers:
+      - name: embedding
+        image: pradeesh143/embedding-service:latest
+        ports:
+        - containerPort: 5001
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "1"
+          limits:
+            memory: "1Gi"
+            cpu: "2"
+        volumeMounts:
+        - name: hf-cache
+          mountPath: /root/.cache/huggingface
+      volumes:
+      - name: hf-cache
+        persistentVolumeClaim:
+          claimName: embedding-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: embedding-service
+spec:
+  selector:
+    app: embedding
+  ports:
+    - protocol: TCP
+      port: 5001
+      targetPort: 5001
+  type: ClusterIP

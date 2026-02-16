@@ -15,11 +15,11 @@ spec:
       containers:
       - name: ollama
         image: ollama/ollama
-        args: ["server"]  # Ollama server mode
+        args: ["serve"]  # Ollama server mode
         ports:
         - containerPort: 11434
         volumeMounts:
-        - mountPath: /root/.ollama
+        - mountPath: /root/.ollama ## mounting the models
           name: ollama-storage
         resources:
           requests:

@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vector-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vector-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vector-store
+  template:
+    metadata:
+      labels:
+        app: vector-store
+    spec:
+      containers:
+      - name: vector-store
+        image: pradeesh143/vector-store:v2
+        ports:
+        - containerPort: 5002
+        volumeMounts:
+        - mountPath: /data
+          name: vector-storage
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "1"
+          limits:
+            memory: "1Gi"
+            cpu: "2"
+      volumes:
+      - name: vector-storage
+        persistentVolumeClaim:
+          claimName: vector-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vector-store
+spec:
+  selector:
+    app: vector-store
+  ports:
+    - protocol: TCP
+      port: 5002
+      targetPort: 5002
+  type: ClusterIP
